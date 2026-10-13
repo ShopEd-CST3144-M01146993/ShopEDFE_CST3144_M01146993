@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coursework - Lessons & Shopping Cart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+
+    <div id="app">
+        <h1>Coursework Front-End</h1>
+
+        <button v-bind:disabled="numberOfItems === 0 && !displayCart" @click="toggleCart">
+            <template v-if="!displayCart">Checkout ({{ numberOfItems }})</template>
+            <template v-else>Lessons</template>
+        </button>
+
+        <div v-if="!displayCart">
+            <template v-for="lesson in lessons">
+                <h2>{{ lesson.subject }}</h2>
+                <p>Location: {{ lesson.location }}</p>
+                <p>Price: £{{ lesson.price }}</p>
+                <p>Spaces Available: {{ lesson.availability }}</p>
+                <img v-bind:src="lesson.image" v-bind:alt="lesson.altText" width="150">
+                <br><br>
+                <button v-bind:disabled="!canAddToCart(lesson)" @click="addToCart(lesson)">
+                    Add to Cart
+                </button>
+            </template>
+        </div>
+
+        <div v-else>
+            <h2>Checkout Page</h2>
+            <h3>Cart</h3>
+            <p>Items in cart: {{ numberOfItems }}</p>
+            <ul>
+                <li v-for="(itemId, index) in cart" :key="index">
+                    Lesson ID: {{ itemId }}
+                </li>
+            </ul>
+
+            <h3>Summary</h3>
+            <ul>
+                <template v-for="lesson in lessons">
+                    <li v-if="lessonCount(lesson.id) > 0">
+                        <p>
+                            {{ lesson.subject }}
+                            <span v-show="lessonCount(lesson.id) > 1">({{ lessonCount(lesson.id) }})</span>
+                            <button @click="removeFromCart(lesson.id)">Remove</button>
+                        </p>
+                    </li>
+                </template>
+            </ul>
+
+            <h3>Order Details</h3>
+            <p>Customer Name: <input v-model="order.customerName"></p>
+            <p>Email: <input v-model="order.email"></p>
+            <p>Phone: <input v-model="order.phone"></p>
+
+            <button @click="checkout" v-bind:disabled="!canCheckout">Place Order</button>
+        </div>
+    </div>
+
+    <script type="module">
+        const { createApp } = Vue;
+
+        const app = createApp({
+            data() {
+                return {
+                    displayCart: false,
+                    cart: [],
+                    lessons: [
+                        {
+                            id: 1001,
+                            subject: "Computer Science",
+                            location: "Hendon",
+                            price: 50,
+                            availability: 5,
+                            image: "../images/koalaSmall.jpg",
+                            altText: "Computer Science lesson image"
+                        },
+                        {
+                            id: 1002,
+                            subject: "Business Intelligence",
+                            location: "Enfield",
+                            price: 18,
+                            availability: 5,
+                            image: "../images/koalaSmall.jpg",
+                            altText: "Business Intelligence lesson image"
+                        },
+                        {
+                            id: 1003,
+                            subject: "Systems Analysis",
+                            location: "Brass",
+                            price: 200,
+                            availability: 5,
+                            image: "../images/koalaSmall.jpg",
+                            altText: "Systems Analysis lesson image"
+                        },
+                        {
+                            id: 1004,
+                            subject: "UI/UX Design",
+                            location: "Nile",
+                            price: 9,
+                            availability: 5,
+                            image: "../images/koalaSmall.jpg",
+                            altText: "UI/UX Design lesson image"
+                        },
+
+                    ],
+                    order: {
+                        customerName: "",
+                        email: "",
+                        phone: ""
+                    }
+                }
+            },
+            computed: {
+                numberOfItems() {
+                    return this.cart.length;
+                },
+
+                canCheckout() {
+                    return this.cart.length > 0 &&
+                        this.order.customerName &&
+                        this.order.email &&
+                        this.order.phone;
+                }
+            },
+            methods: {
+                addToCart(lesson) {
+                    if (this.canAddToCart(lesson)) {
+                        this.cart.push(lesson.id);
+                        lesson.availability = lesson.availability - 1;
+                    }
+                },
+
+                canAddToCart(lesson) {
+                    return lesson.availability > 0;
+                },
+
+                toggleCart() {
+                    this.displayCart = !this.displayCart;
+                },
+
+                checkout() {
+                    if (this.canCheckout) {
+                        alert("Order has been placed successfully!");
+                        this.cart = [];
+                        this.order.customerName = "";
+                        this.order.email = "";
+                        this.order.phone = "";
+                        this.displayCart = false;
+                    }
+                    else {
+                        alert("Cheeky boy");
+                    }
+                },
+
+                lessonCount(lessonID) {
+                    return this.cart.filter(id => id === lessonID).length;
+                },
+
+                removeFromCart(lessonID) {
+                    const index = this.cart.indexOf(lessonID);
+                    if (index !== -1) {
+                        this.cart.splice(index, 1);
+                    }
+                    const lesson = this.lessons.find(lesson => lesson.id === lessonID);
+                    if (lesson) {
+                        lesson.availability = lesson.availability + 1;
+                    }
+                }
+            }
+        });
+
+        app.mount("#app");
+    </script>
+
+</body>
+
+</html>
