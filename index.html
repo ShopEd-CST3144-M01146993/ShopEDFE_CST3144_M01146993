@@ -7,7 +7,7 @@
     <title>ShopEd - Coursework Lessons & Shopping Cart</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
     <script src="lessons.js"></script>
     <script src="countryCodesData.js"></script>
 </head>
@@ -17,6 +17,9 @@
     <div class="fixed inset-0 bg-white/80 pointer-events-none"></div>
 
     <div id="app" class="relative z-10 w-full min-h-screen">
+
+        <div v-if="sortByOpen || sortOrderOpen || phoneCountryOpen" @click="sortByOpen = false; sortOrderOpen = false; phoneCountryOpen = false"
+            class="fixed inset-0 z-20"></div>
 
         <header class="sticky top-0 bg-gradient-to-r from-transparent via-white to-transparent z-50 w-full border-b-2 border-black mb-6 px-6">
             <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center py-4 gap-4">
@@ -52,8 +55,8 @@
 
                     <div class="absolute -right-10 top-24 transform -translate-y-1/2">
                         <button v-bind:disabled="numberOfItems === 0 && !displayCart" @click="toggleCart"
-                            class="relative flex items-center border-2 ring-2 ring-transparent border-transparent justify-center px-3 py-1 bg-black text-white rounded-full w-[32px] h-[32px] text-sm disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
-                            :class="displayCart && 'ring-black border-white'">
+                            class="relative flex items-center border-2 ring-2 ring-transparent border-transparent justify-center px-3 py-1 bg-black text-white rounded-full w-8 h-8 text-sm inline-flex items-center gap-1.5"
+                            :class="[displayCart && 'ring-black border-white', (numberOfItems === 0 && !displayCart) && 'opacity-50 cursor-not-allowed']">
                             <i class="fa fa-shopping-cart"></i>
                             <span v-show="numberOfItems > 0"
                                 class="absolute -top-2 -right-2 bg-red-600 border border-white text-white w-5 h-5 rounded-full text-xs flex items-center justify-center">
@@ -67,49 +70,234 @@
 
         <main class="max-w-4xl mx-auto px-6 pb-6">
 
-            <div v-if="currentView === 'lessons' && !displayCart">
-                <template v-for="lesson in lessons">
-                    <h2>{{ lesson.subject }}</h2>
-                    <p>Location: {{ lesson.location }}</p>
-                    <p>Price: £{{ lesson.price }}</p>
-                    <p>Spaces Available: {{ lesson.availability }}</p>
-                    <img v-bind:src="lesson.image" v-bind:alt="lesson.altText" width="150">
-                    <br><br>
-                    <button v-bind:disabled="!canAddToCart(lesson)" @click="addToCart(lesson)">
-                        Add to Cart
+            <div v-if="currentView === 'home' && !displayCart" class="border border-black p-5 mb-6 bg-white">
+                <h2 class="text-lg font-bold mb-2">Welcome to ShopEd</h2>
+                <p class="text-sm mb-4">A simple coursework portal for viewing and booking lessons across Hendon, Enfield,
+                    Brass, and Nile campuses.</p>
+                <button @click="currentView = 'lessons'"
+                    class="px-4 py-1.5 bg-black text-white text-sm inline-flex items-center gap-1.5">
+                    <i class="fa fa-book"></i> View Lessons
+                </button>
+            </div>
+
+            <div class="bg-white p-5 border border-black" v-if="currentView === 'lessons' && !displayCart">
+                <div class="flex flex-wrap items-center mb-6 gap-4 border-b border-black bg-white p-3 border">
+                    <div class="relative flex items-center gap-2">
+                        <span class="text-sm font-bold">Sort By:</span>
+                        <button @click="sortByOpen = !sortByOpen; sortOrderOpen = false"
+                            class="px-3 py-1.5 border border-black text-sm bg-white font-medium inline-flex items-center justify-between gap-2 min-w-[140px]">
+                            <span>{{ sortBy ? sortBy.charAt(0).toUpperCase() + sortBy.slice(1) : 'Select Filter' }}</span>
+                            <i class="fa fa-chevron-down text-xs"></i>
+                        </button>
+                        <div v-if="sortByOpen"
+                            class="absolute top-full left-16 mt-1 w-40 bg-white border border-black shadow-lg z-30 py-1">
+                            <button @click="sortBy = 'subject'; sortByOpen = false"
+                                class="w-full text-left px-3 py-1.5 text-sm hover:bg-black hover:text-white flex items-center justify-between">
+                                <span>Subject</span>
+                                <i v-if="sortBy === 'subject'" class="fa fa-check"></i>
+                            </button>
+                            <button @click="sortBy = 'location'; sortByOpen = false"
+                                class="w-full text-left px-3 py-1.5 text-sm hover:bg-black hover:text-white flex items-center justify-between">
+                                <span>Location</span>
+                                <i v-if="sortBy === 'location'" class="fa fa-check"></i>
+                            </button>
+                            <button @click="sortBy = 'price'; sortByOpen = false"
+                                class="w-full text-left px-3 py-1.5 text-sm hover:bg-black hover:text-white flex items-center justify-between">
+                                <span>Price</span>
+                                <i v-if="sortBy === 'price'" class="fa fa-check"></i>
+                            </button>
+                            <button @click="sortBy = 'availability'; sortByOpen = false"
+                                class="w-full text-left px-3 py-1.5 text-sm hover:bg-black hover:text-white flex items-center justify-between">
+                                <span>Availability</span>
+                                <i v-if="sortBy === 'availability'" class="fa fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="relative flex items-center gap-2">
+                        <span class="text-sm font-bold">Order:</span>
+                        <button @click="sortOrderOpen = !sortOrderOpen; sortByOpen = false"
+                            class="px-3 py-1.5 border border-black text-sm bg-white font-medium inline-flex items-center justify-between gap-2 min-w-[120px]">
+                            <span>{{ sortOrder === 'asc' ? 'Ascending' : 'Descending' }}</span>
+                            <i class="fa fa-chevron-down text-xs"></i>
+                        </button>
+                        <div v-if="sortOrderOpen"
+                            class="absolute top-full right-0 mt-1 w-36 bg-white border border-black shadow-lg z-30 py-1">
+                            <button @click="sortOrder = 'asc'; sortOrderOpen = false"
+                                class="w-full text-left px-3 py-1.5 text-sm hover:bg-black hover:text-white flex items-center justify-between">
+                                <span>Ascending</span>
+                                <i v-if="sortOrder === 'asc'" class="fa fa-check"></i>
+                            </button>
+                            <button @click="sortOrder = 'desc'; sortOrderOpen = false"
+                                class="w-full text-left px-3 py-1.5 text-sm hover:bg-black hover:text-white flex items-center justify-between">
+                                <span>Descending</span>
+                                <i v-if="sortOrder === 'desc'" class="fa fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div v-for="lesson in sortedLessons" :key="lesson.id"
+                        class="border border-black p-2 flex flex-col justify-between bg-white">
+                        <div>
+                            <img class="w-full h-32 object-cover border border-gray-300 mb-2" v-bind:src="lesson.image"
+                                v-bind:alt="lesson.altText">
+                            <h2 class="text-base font-bold mb-1 truncate">{{ lesson.subject }}</h2>
+                            <p class="text-sm"><i class="fa fa-map-marker"></i> Location: {{ lesson.location }}</p>
+                            <p class="text-sm"><i class="fa fa-tag"></i> Price: £ {{ lesson.price }}</p>
+
+                            <p v-if="lesson.availability < 1" class="text-sm mb-2 text-red-800 font-medium">
+                                <i class="fa fa-users"></i> No spaces available
+                            </p>
+                            <p v-else class="text-sm mb-2">
+                                <i class="fa fa-users"></i> {{ lesson.availability }} spaces available
+                            </p>
+                        </div>
+                        <button
+                            class="w-full py-1.5 bg-black text-white text-sm border border-black mt-2 inline-flex items-center justify-center gap-1.5"
+                            :class="!canAddToCart(lesson) && 'opacity-50 cursor-not-allowed bg-gray-200 text-gray-500 border-gray-300'"
+                            v-bind:disabled="!canAddToCart(lesson)" @click="addToCart(lesson)">
+                            <i class="fa fa-cart-plus"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="currentView === 'about' && !displayCart" class="border border-black p-5 mb-6 bg-white">
+                <h2 class="text-lg font-bold mb-2">About ShopEd</h2>
+                <p class="text-sm mb-2">ShopEd manages coursework tutoring registration for university modules.</p>
+                <p class="text-sm"><i class="fa fa-university"></i> Supported campuses: Hendon, Enfield, Brass, and Nile.
+                </p>
+            </div>
+
+            <div v-if="currentView === 'contact' && !displayCart" class="border border-black p-5 mb-6 bg-white">
+                <h2 class="text-lg font-bold mb-2">Contact Us</h2>
+                <p class="text-sm mb-4"><i class="fa fa-envelope"></i> Email: support@shoped.ac.uk | <i
+                        class="fa fa-phone"></i> Phone: +44 20 8411 5000</p>
+
+                <form @submit.prevent="alert('Message sent successfully!')" class="space-y-3 max-w-sm">
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Name:</label>
+                        <input type="text" required class="w-full p-1.5 border border-black text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Email:</label>
+                        <input type="email" required class="w-full p-1.5 border border-black text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1">Message:</label>
+                        <textarea required rows="3" class="w-full p-1.5 border border-black text-sm resize-none"></textarea>
+                    </div>
+                    <button type="submit" class="px-3 py-1.5 bg-black text-white text-sm inline-flex items-center gap-1.5">
+                        <i class="fa fa-paper-plane"></i> Send Message
                     </button>
-                </template>
+                </form>
             </div>
 
             <div v-if="displayCart">
-                <h2>Checkout Page</h2>
-                <h3>Cart</h3>
-                <p>Items in cart: {{ numberOfItems }}</p>
-                <ul>
-                    <li v-for="(itemId, index) in cart" :key="index">
-                        Lesson ID: {{ itemId }}
-                    </li>
-                </ul>
+                <div class="border border-black p-6 mb-6 bg-white">
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="fa fa-shopping-cart"></i> Checkout Page
+                    </h2>
 
-                <h3>Summary</h3>
-                <ul>
-                    <template v-for="lesson in lessons">
-                        <li v-if="lessonCount(lesson.id) > 0">
-                            <p>
-                                {{ lesson.subject }}
-                                <span v-show="lessonCount(lesson.id) > 1">({{ lessonCount(lesson.id) }})</span>
-                                <button @click="removeFromCart(lesson.id)">Remove</button>
-                            </p>
-                        </li>
-                    </template>
-                </ul>
+                    <div v-if="cart.length === 0" class="text-center py-12 text-red-600">
+                        <p class="text-lg font-bold">Your cart is empty.</p>
+                        <button @click="displayCart = false; currentView = 'lessons'"
+                            class="mt-4 px-4 py-2 border border-black bg-black text-white hover:bg-neutral-800 text-sm font-bold inline-flex items-center gap-2">
+                            <i class="fa fa-arrow-left"></i> Continue Shopping
+                        </button>
+                    </div>
 
-                <h3>Order Details</h3>
-                <p>Customer Name: <input v-model="order.customerName"></p>
-                <p>Email: <input v-model="order.email"></p>
-                <p>Phone: <input v-model="order.phone"></p>
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="text-base font-bold border-b border-black pb-2 mb-3">Cart Summary</h3>
+                            <div class="space-y-3">
+                                <template v-for="lesson in lessons">
+                                    <div v-if="lessonCount(lesson.id) > 0"
+                                        class="flex items-center justify-between border border-black p-3">
+                                        <div class="flex items-center gap-3">
+                                            <img v-bind:src="lesson.image" v-bind:alt="lesson.altText"
+                                                class="w-12 h-12 object-cover border border-black">
+                                            <div>
+                                                <p class="font-bold text-sm">{{ lesson.subject }}</p>
+                                                <span class="flex gap-2">
+                                                    <p class="text-xs text-neutral-600">£{{ lesson.price }} each</p>
+                                                    <p class="text-xs font-semibold">Seats: {{ lessonCount(lesson.id) }}</p>
+                                                </span>
+                                                <p class="text-xs font-bold mt-0.5">£{{ lesson.price *
+                                                    lessonCount(lesson.id) }}</p>
+                                            </div>
+                                        </div>
+                                        <button @click="removeFromCart(lesson.id)"
+                                            class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs inline-flex items-center gap-1">
+                                            <i class="fa fa-trash"></i> Remove
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                            <div
+                                class="mt-4 pt-3 border-t border-black flex justify-between items-center text-sm font-bold">
+                                <span>Total ({{ numberOfItems }} {{ numberOfItems === 1 ? 'item' : 'items' }}):</span>
+                                <span>£{{ cartTotal }}</span>
+                            </div>
+                        </div>
 
-                <button @click="checkout" v-bind:disabled="!canCheckout">Place Order</button>
+                        <div>
+                            <h3 class="text-base font-bold border-b border-black pb-2 mb-3">Order Details</h3>
+                            <form @submit.prevent="checkout" class="space-y-3">
+                                <div>
+                                    <label class="block text-xs font-bold mb-1">Customer Name:</label>
+                                    <input v-model="order.customerName" type="text" required placeholder="John Doe"
+                                        class="w-full p-2 border border-black text-sm">
+                                    <p v-if="order.customerName.length > 0 && !isNameValid" class="text-red-500 text-xs mt-1">
+                                        Name cannot start with numbers or special characters, and must contain letters only.
+                                    </p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold mb-1">Email:</label>
+                                    <input v-model="order.email" type="email" required placeholder="john@example.com"
+                                        class="w-full p-2 border border-black text-sm">
+                                    <p v-if="order.email.length > 0 && !isEmailValid" class="text-red-500 text-xs mt-1">
+                                        Please enter a valid email address (e.g. john@example.com).
+                                    </p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold mb-1">Phone:</label>
+                                    <div class="flex gap-2">
+                                        <div class="relative min-w-[75px]">
+                                            <button type="button" @click="phoneCountryOpen = !phoneCountryOpen; sortByOpen = false; sortOrderOpen = false"
+                                                class="w-full p-2 border border-black text-sm bg-white font-medium inline-flex items-center justify-between gap-2">
+                                                <span class="truncate">{{ order.phoneCountryCode }}</span>
+                                                <i class="fa fa-chevron-down text-xs"></i>
+                                            </button>
+                                            <div v-if="phoneCountryOpen"
+                                                class="absolute top-full left-0 mt-1 w-64 max-h-60 overflow-y-auto bg-white border border-black shadow-lg z-30 py-1">
+                                                <button v-for="country in countries" :key="country.name + country.code" type="button"
+                                                    @click="order.phoneCountryCode = country.code; selectedCountryName = country.name; phoneCountryOpen = false"
+                                                    class="w-full text-left px-3 py-1.5 text-xs hover:bg-black hover:text-white flex items-center justify-between">
+                                                    <span class="truncate">{{ country.name }} ({{ country.code }})</span>
+                                                    <i v-if="order.phoneCountryCode === country.code && selectedCountryName === country.name" class="fa fa-check"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <input v-model="order.phone"
+                                            v-on:keydown="onPhoneKeydown"
+                                            v-on:input="onPhoneInput"
+                                            type="tel" required placeholder="8012345678"
+                                            class="w-full p-2 border border-black text-sm">
+                                    </div>
+                                </div>
+
+                                <button type="submit" v-bind:disabled="!canCheckout"
+                                    class="w-full mt-4 py-2 bg-black text-white font-bold text-sm border border-black inline-flex items-center justify-center gap-2"
+                                    :class="!canCheckout && 'opacity-50 cursor-not-allowed bg-gray-200 text-gray-500 border-gray-300'">
+                                    <i class="fa fa-check"></i> Place Order
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -124,9 +312,17 @@
                     displayCart: false,
                     cart: [],
                     lessons: lessonsData,
+                    sortBy: '',
+                    sortOrder: 'asc',
+                    sortByOpen: false,
+                    sortOrderOpen: false,
+                    phoneCountryOpen: false,
+                    selectedCountryName: "Nigeria",
+                    countries: countryCodesData,
                     order: {
                         customerName: "",
                         email: "",
+                        phoneCountryCode: "+234",
                         phone: ""
                     }
                 }
@@ -136,11 +332,49 @@
                     return this.cart.length;
                 },
 
+                cartTotal() {
+                    return this.lessons.reduce((total, lesson) => {
+                        return total + (lesson.price * this.lessonCount(lesson.id));
+                    }, 0);
+                },
+
+                isNameValid() {
+                    const nameRegex = /^[A-Za-z][A-Za-z\s'-]*$/;
+                    return nameRegex.test(this.order.customerName.trim());
+                },
+
+                isEmailValid() {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    return emailRegex.test(this.order.email.trim());
+                },
+
                 canCheckout() {
+                    const phoneRegex = /^[0-9]+$/;
+
                     return this.cart.length > 0 &&
-                        this.order.customerName &&
-                        this.order.email &&
-                        this.order.phone;
+                        this.isNameValid &&
+                        this.isEmailValid &&
+                        phoneRegex.test(this.order.phone.trim());
+                },
+
+                sortedLessons() {
+                    if (!this.sortBy) {
+                        return this.lessons;
+                    }
+                    return [...this.lessons].sort((a, b) => {
+                        let modifier = this.sortOrder === 'desc' ? -1 : 1;
+                        let valA = a[this.sortBy];
+                        let valB = b[this.sortBy];
+
+                        if (typeof valA === 'string') {
+                            valA = valA.toLowerCase();
+                            valB = valB.toLowerCase();
+                        }
+
+                        if (valA < valB) return -1 * modifier;
+                        if (valA > valB) return 1 * modifier;
+                        return 0;
+                    });
                 }
             },
             methods: {
@@ -168,6 +402,8 @@
                         this.cart = [];
                         this.order.customerName = "";
                         this.order.email = "";
+                        this.order.phoneCountryCode = "+234";
+                        this.selectedCountryName = "Nigeria";
                         this.order.phone = "";
                         this.displayCart = false;
                     }
@@ -189,6 +425,17 @@
                     if (lesson) {
                         lesson.availability = lesson.availability + 1;
                     }
+                },
+
+                onPhoneKeydown(event) {
+                    const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+                    if (!allowedKeys.includes(event.key) && !/^[0-9]$/.test(event.key)) {
+                        event.preventDefault();
+                    }
+                },
+
+                onPhoneInput(event) {
+                    this.order.phone = event.target.value.replace(/\D/g, '');
                 }
             }
         });
