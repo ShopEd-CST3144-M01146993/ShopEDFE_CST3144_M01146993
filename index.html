@@ -12,60 +12,106 @@
     <script src="countryCodesData.js"></script>
 </head>
 
-<body>
+<body class="relative text-black font-sans min-h-screen bg-no-repeat bg-cover bg-center bg-fixed" style="background-image: url('images/bg-image.jpg');">
 
-    <div id="app">
-        <h1>Coursework Front-End</h1>
+    <div class="fixed inset-0 bg-white/80 pointer-events-none"></div>
 
-        <button v-bind:disabled="numberOfItems === 0 && !displayCart" @click="toggleCart">
-            <template v-if="!displayCart">Checkout ({{ numberOfItems }})</template>
-            <template v-else>Lessons</template>
-        </button>
+    <div id="app" class="relative z-10 w-full min-h-screen">
 
-        <div v-if="!displayCart">
-            <template v-for="lesson in lessons">
-                <h2>{{ lesson.subject }}</h2>
-                <p>Location: {{ lesson.location }}</p>
-                <p>Price: £{{ lesson.price }}</p>
-                <p>Spaces Available: {{ lesson.availability }}</p>
-                <img v-bind:src="lesson.image" v-bind:alt="lesson.altText" width="150">
-                <br><br>
-                <button v-bind:disabled="!canAddToCart(lesson)" @click="addToCart(lesson)">
-                    Add to Cart
-                </button>
-            </template>
-        </div>
+        <header class="sticky top-0 bg-gradient-to-r from-transparent via-white to-transparent z-50 w-full border-b-2 border-black mb-6 px-6">
+            <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center py-4 gap-4">
+                <h1 class="text-2xl font-bold tracking-tight cursor-pointer flex items-center gap-2"
+                    @click="currentView = 'home'; displayCart = false">
+                    <i class="fa fa-graduation-cap"></i> ShopEd
+                </h1>
 
-        <div v-else>
-            <h2>Checkout Page</h2>
-            <h3>Cart</h3>
-            <p>Items in cart: {{ numberOfItems }}</p>
-            <ul>
-                <li v-for="(itemId, index) in cart" :key="index">
-                    Lesson ID: {{ itemId }}
-                </li>
-            </ul>
+                <nav class="flex items-center gap-2 relative">
+                    <button @click="currentView = 'home'; displayCart = false"
+                        :class="currentView === 'home' && !displayCart ? 'bg-black text-white' : 'bg-white text-black'"
+                        class="px-3 py-1 border border-black text-sm inline-flex items-center gap-1.5">
+                        <i class="fa fa-home"></i> Home
+                    </button>
 
-            <h3>Summary</h3>
-            <ul>
+                    <button @click="currentView = 'lessons'; displayCart = false"
+                        :class="currentView === 'lessons' && !displayCart ? 'bg-black text-white' : 'bg-white text-black'"
+                        class="px-3 py-1 border border-black text-sm inline-flex items-center gap-1.5">
+                        <i class="fa fa-book"></i> Lessons
+                    </button>
+
+                    <button @click="currentView = 'about'; displayCart = false"
+                        :class="currentView === 'about' && !displayCart ? 'bg-black text-white' : 'bg-white text-black'"
+                        class="px-3 py-1 border border-black text-sm inline-flex items-center gap-1.5">
+                        <i class="fa fa-info-circle"></i> About Us
+                    </button>
+
+                    <button @click="currentView = 'contact'; displayCart = false"
+                        :class="currentView === 'contact' && !displayCart ? 'bg-black text-white' : 'bg-white text-black'"
+                        class="px-3 py-1 border border-black text-sm inline-flex items-center gap-1.5">
+                        <i class="fa fa-envelope"></i> Contact Us
+                    </button>
+
+                    <div class="absolute -right-10 top-24 transform -translate-y-1/2">
+                        <button v-bind:disabled="numberOfItems === 0 && !displayCart" @click="toggleCart"
+                            class="relative flex items-center border-2 ring-2 ring-transparent border-transparent justify-center px-3 py-1 bg-black text-white rounded-full w-[32px] h-[32px] text-sm disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+                            :class="displayCart && 'ring-black border-white'">
+                            <i class="fa fa-shopping-cart"></i>
+                            <span v-show="numberOfItems > 0"
+                                class="absolute -top-2 -right-2 bg-red-600 border border-white text-white w-5 h-5 rounded-full text-xs flex items-center justify-center">
+                                {{ numberOfItems }}
+                            </span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <main class="max-w-4xl mx-auto px-6 pb-6">
+
+            <div v-if="currentView === 'lessons' && !displayCart">
                 <template v-for="lesson in lessons">
-                    <li v-if="lessonCount(lesson.id) > 0">
-                        <p>
-                            {{ lesson.subject }}
-                            <span v-show="lessonCount(lesson.id) > 1">({{ lessonCount(lesson.id) }})</span>
-                            <button @click="removeFromCart(lesson.id)">Remove</button>
-                        </p>
-                    </li>
+                    <h2>{{ lesson.subject }}</h2>
+                    <p>Location: {{ lesson.location }}</p>
+                    <p>Price: £{{ lesson.price }}</p>
+                    <p>Spaces Available: {{ lesson.availability }}</p>
+                    <img v-bind:src="lesson.image" v-bind:alt="lesson.altText" width="150">
+                    <br><br>
+                    <button v-bind:disabled="!canAddToCart(lesson)" @click="addToCart(lesson)">
+                        Add to Cart
+                    </button>
                 </template>
-            </ul>
+            </div>
 
-            <h3>Order Details</h3>
-            <p>Customer Name: <input v-model="order.customerName"></p>
-            <p>Email: <input v-model="order.email"></p>
-            <p>Phone: <input v-model="order.phone"></p>
+            <div v-if="displayCart">
+                <h2>Checkout Page</h2>
+                <h3>Cart</h3>
+                <p>Items in cart: {{ numberOfItems }}</p>
+                <ul>
+                    <li v-for="(itemId, index) in cart" :key="index">
+                        Lesson ID: {{ itemId }}
+                    </li>
+                </ul>
 
-            <button @click="checkout" v-bind:disabled="!canCheckout">Place Order</button>
-        </div>
+                <h3>Summary</h3>
+                <ul>
+                    <template v-for="lesson in lessons">
+                        <li v-if="lessonCount(lesson.id) > 0">
+                            <p>
+                                {{ lesson.subject }}
+                                <span v-show="lessonCount(lesson.id) > 1">({{ lessonCount(lesson.id) }})</span>
+                                <button @click="removeFromCart(lesson.id)">Remove</button>
+                            </p>
+                        </li>
+                    </template>
+                </ul>
+
+                <h3>Order Details</h3>
+                <p>Customer Name: <input v-model="order.customerName"></p>
+                <p>Email: <input v-model="order.email"></p>
+                <p>Phone: <input v-model="order.phone"></p>
+
+                <button @click="checkout" v-bind:disabled="!canCheckout">Place Order</button>
+            </div>
+        </main>
     </div>
 
     <script>
@@ -74,6 +120,7 @@
         const app = createApp({
             data() {
                 return {
+                    currentView: 'home',
                     displayCart: false,
                     cart: [],
                     lessons: lessonsData,
@@ -109,6 +156,9 @@
                 },
 
                 toggleCart() {
+                    if (this.cart.length === 0 && !this.displayCart) {
+                        return;
+                    }
                     this.displayCart = !this.displayCart;
                 },
 
