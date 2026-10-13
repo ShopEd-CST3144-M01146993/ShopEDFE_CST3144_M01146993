@@ -4,9 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coursework - Lessons & Shopping Cart</title>
+    <title>ShopEd - Coursework Lessons & Shopping Cart</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="lessons.js"></script>
+    <script src="countryCodesData.js"></script>
 </head>
 
 <body>
@@ -65,7 +68,7 @@
         </div>
     </div>
 
-    <script type="module">
+    <script>
         const { createApp } = Vue;
 
         const app = createApp({
@@ -73,45 +76,7 @@
                 return {
                     displayCart: false,
                     cart: [],
-                    lessons: [
-                        {
-                            id: 1001,
-                            subject: "Computer Science",
-                            location: "Hendon",
-                            price: 50,
-                            availability: 5,
-                            image: "../images/koalaSmall.jpg",
-                            altText: "Computer Science lesson image"
-                        },
-                        {
-                            id: 1002,
-                            subject: "Business Intelligence",
-                            location: "Enfield",
-                            price: 18,
-                            availability: 5,
-                            image: "../images/koalaSmall.jpg",
-                            altText: "Business Intelligence lesson image"
-                        },
-                        {
-                            id: 1003,
-                            subject: "Systems Analysis",
-                            location: "Brass",
-                            price: 200,
-                            availability: 5,
-                            image: "../images/koalaSmall.jpg",
-                            altText: "Systems Analysis lesson image"
-                        },
-                        {
-                            id: 1004,
-                            subject: "UI/UX Design",
-                            location: "Nile",
-                            price: 9,
-                            availability: 5,
-                            image: "../images/koalaSmall.jpg",
-                            altText: "UI/UX Design lesson image"
-                        },
-
-                    ],
+                    lessons: lessonsData,
                     order: {
                         customerName: "",
                         email: "",
