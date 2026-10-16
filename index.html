@@ -712,6 +712,10 @@
                                 valA = valA.toLowerCase();
                             }
 
+                            if (typeof valB === "string") {
+                                valB = valB.toLowerCase();
+                            }
+
                             if (valA < valB) return -1 * modifier;
                             if (valA > valB) return 1 * modifier;
                             return 0;
